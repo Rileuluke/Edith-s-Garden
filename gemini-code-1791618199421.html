@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edith's Garden 🌸</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0d0614 0%, #1a0b2e 40%, #0d1b1e 80%, #051014 100%);
+      --park-grass: linear-gradient(to top, #0a1f18 0%, #143527 50%, rgba(20, 53, 39, 0) 100%);
+      --accent-gold: #ffd700;
+      --modal-bg: rgba(20, 10, 30, 0.92);
+      --card-border: rgba(255, 215, 0, 0.3);
+    }
+
+    body.day-mode {
+      --bg-gradient: linear-gradient(135deg, #2d1436 0%, #4a1c40 30%, #682d49 60%, #3a405a 100%);
+      --park-grass: linear-gradient(to top, #1b3a2b 0%, #2a523d 50%, rgba(42, 82, 61, 0) 100%);
+      --modal-bg: rgba(40, 20, 45, 0.94);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Georgia', 'Segoe UI', serif;
+      background: var(--bg-gradient);
+      color: #fff;
+      transition: background 1.5s ease;
+    }
+
+    /* Canvas para efectos */
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Encabezado */
+    header {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    h1.title {
+      font-size: 2.5rem;
+      letter-spacing: 3px;
+      color: #fce4ec;
+      text-shadow: 0 0 15px rgba(255, 182, 193, 0.8), 0 0 30px rgba(186, 85, 211, 0.6);
+      font-weight: 300;
+      margin-bottom: 5px;
+    }
+
+    p.subtitle {
+      font-size: 0.95rem;
+      color: #d1c4e9;
+      font-style: italic;
+      letter-spacing: 1px;
+      opacity: 0.85;
+    }
+
+    /* Barra Superior de Herramientas */
+    .top-controls {
+      position: absolute;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .btn-top {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .btn-top:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: var(--accent-gold);
+      transform: translateY(-2px);
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+    }
+
+    /* Contenedor del Parque */
+    .park-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 75%;
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      padding: 0 10% 80px 10%;
+      background: var(--park-grass);
+      z-index: 2;
+    }
+
+    /* Estructura del Tulipán */
+    .tulip-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .tulip-wrapper:hover {
+      transform: scale(1.06) translateY(-5px);
+    }
+
+    .tag-label {
+      background: rgba(15, 5, 25, 0.75);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      color: #ffe0b2;
+      padding: 5px 14px;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .stem {
+      width: 8px;
+      height: 180px;
+      background: linear-gradient(to right, #2e7d32, #4caf50, #1b5e20);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .leaf {
+      position: absolute;
+      width: 45px;
+      height: 90px;
+      background: linear-gradient(135deg, #388e3c, #1b5e20);
+      border-radius: 0 100px 0 100px;
+      top: 50%;
+    }
+
+    .leaf.left {
+      left: -40px;
+      transform: rotate(-25deg);
+    }
+
+    .leaf.right {
+      right: -40px;
+      transform: scaleX(-1) rotate(-25deg);
+    }
+
+    /* Pétalos del Tulipán */
+    .flower-head {
+      position: relative;
+      width: 80px;
+      height: 90px;
+      margin-bottom: -5px;
+      transition: transform 0.5s ease;
+    }
+
+    .petal {
+      position: absolute;
+      bottom: 0;
+      width: 45px;
+      height: 85px;
+      border-radius: 50% 50% 50% 50% / 80% 80% 20% 20%;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Tulipán Izquierda - Degradado Púrpura/Rosa */
+    .tulip-left .p-left {
+      background: linear-gradient(to top, #4a148c, #ab47bc);
+      left: 5px;
+      transform: rotate(-12deg);
+    }
+    .tulip-left .p-right {
+      background: linear-gradient(to top, #6a1b9a, #ce93d8);
+      right: 5px;
+      transform: rotate(12deg);
+    }
+    .tulip-left .p-center {
+      background: linear-gradient(to top, #8e24aa, #f3e5f5);
+      left: 17.5px;
+      height: 90px;
+    }
+
+    /* Tulipán Centro - Tinto Oscuro / Rojo Plegado */
+    .tulip-center .p-left {
+      background: linear-gradient(to top, #310008, #880e4f);
+      left: 5px;
+      transform: rotate(-10deg);
+    }
+    .tulip-center .p-right {
+      background: linear-gradient(to top, #4a000d, #ad1457);
+      right: 5px;
+      transform: rotate(10deg);
+    }
+    .tulip-center .p-center {
+      background: linear-gradient(to top, #58000c, #c2185b);
+      left: 17.5px;
+      height: 92px;
+    }
+
+    /* Tulipán Derecha - Degradado Fuego/Melocotón */
+    .tulip-right .p-left {
+      background: linear-gradient(to top, #b71c1c, #ff7043);
+      left: 5px;
+      transform: rotate(-12deg);
+    }
+    .tulip-right .p-right {
+      background: linear-gradient(to top, #c62828, #ffb74d);
+      right: 5px;
+      transform: rotate(12deg);
+    }
+    .tulip-right .p-center {
+      background: linear-gradient(to top, #d32f2f, #ffe0b2);
+      left: 17.5px;
+      height: 90px;
+    }
+
+    /* Estado Florecido (Apertura) */
+    .tulip-wrapper.bloomed .flower-head {
+      transform: scale(1.1);
+    }
+    .tulip-wrapper.bloomed .p-left {
+      transform: rotate(-28deg) translateX(-8px);
+    }
+    .tulip-wrapper.bloomed .p-right {
+      transform: rotate(28deg) translateX(8px);
+    }
+    .tulip-wrapper.bloomed .p-center {
+      transform: scaleY(1.05);
+    }
+
+    /* Resplandor */
+    .glow {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+      top: -10px;
+      left: -10px;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: pulse 3s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.4; }
+      100% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    /* Barra Inferior de Audio / Efectos */
+    .bottom-bar {
+      position: absolute;
+      bottom: 15px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      z-index: 10;
+      flex-wrap: wrap;
+      padding: 0 10px;
+    }
+
+    .btn-bottom {
+      background: rgba(15, 10, 25, 0.8);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      color: #e0e0e0;
+      padding: 9px 18px;
+      border-radius: 25px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-bottom:hover, .btn-bottom.active {
+      background: rgba(255, 215, 0, 0.2);
+      border-color: #ffd700;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+    }
+
+    .btn-celebrate {
+      background: linear-gradient(135deg, #8e24aa, #d81b60);
+      border: none;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .btn-celebrate:hover {
+      background: linear-gradient(135deg, #ab47bc, #ad1457);
+      transform: scale(1.05);
+    }
+
+    /* Modal / Ventanas Emergentes */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--modal-bg);
+      border: 1px solid var(--card-border);
+      padding: 30px 25px;
+      border-radius: 20px;
+      max-width: 480px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(255, 215, 0, 0.2);
+      transform: translateY(20px) scale(0.95);
+      transition: transform 0.4s ease;
+      position: relative;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-tag {
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      color: #ffd700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .modal-text {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #f3e5f5;
+      margin-bottom: 25px;
+      font-style: italic;
+    }
+
+    .btn-close {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 8px 25px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: #ffd700;
+    }
+
+    /* Estilos del Cuadro de Deseos */
+    .wish-input {
+      width: 100%;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      color: #fff;
+      padding: 10px;
+      font-family: inherit;
+      resize: none;
+      margin-bottom: 15px;
+      outline: none;
+    }
+
+    .wish-input:focus {
+      border-color: #ffd700;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    }
+
+    .wishes-list {
+      max-height: 120px;
+      overflow-y: auto;
+      text-align: left;
+      margin-bottom: 15px;
+      padding-right: 5px;
+    }
+
+    .wish-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid #ffd700;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+    }
+
+    .wish-date {
+      font-size: 0.7rem;
+      color: #b39ddb;
+      margin-top: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Canvas Animado para Luciérnagas, Lluvia, Mariposas y Confetti -->
+  <canvas id="gardenCanvas"></canvas>
+
+  <!-- Encabezado -->
+  <header>
+    <h1 class="title">Edith's Garden</h1>
+    <p class="subtitle">Un rincón de paz e intuición</p>
+  </header>
+
+  <!-- Control de Ambiente Superior -->
+  <div class="top-controls">
+    <button class="btn-top" id="btnLetter">💌 Carta Especial</button>
+    <button class="btn-top" id="btnWish">✨ Guardar Deseo</button>
+    <button class="btn-top" id="btnTheme">🌙 Modo Día/Noche</button>
+  </div>
+
+  <!-- Escenario del Parque con los 3 Tulipanes -->
+  <div class="park-container">
+    
+    <!-- Tulipán Izquierdo (Pensar) -->
+    <div class="tulip-wrapper tulip-left" onclick="openTulip('pensar')">
+      <div class="tag-label">Pensar</div>
+      <div class="flower-head">
+        <div class="glow"></div>
+        <div class="petal p-left"></div>
+        <div class="petal p-right"></div>
+        <div class="petal p-center"></div>
+      </div>
+      <div class="stem">
+        <div class="leaf left"></div>
+      </div>
+    </div>
+
+    <!-- Tulipán Central (Alma - Rojo Tinto Oscuro) -->
+    <div class="tulip-wrapper tulip-center" onclick="openTulip('alma')">
+      <div class="tag-label">Alma</div>
+      <div class="flower-head">
+        <div class="glow"></div>
+        <div class="petal p-left"></div>
+        <div class="petal p-right"></div>
+        <div class="petal p-center"></div>
+      </div>
+      <div class="stem">
+        <div class="leaf left"></div>
+        <div class="leaf right"></div>
+      </div>
+    </div>
+
+    <!-- Tulipán Derecho (Cuerpo) -->
+    <div class="tulip-wrapper tulip-right" onclick="openTulip('cuerpo')">
+      <div class="tag-label">Cuerpo</div>
+      <div class="flower-head">
+        <div class="glow"></div>
+        <div class="petal p-left"></div>
+        <div class="petal p-right"></div>
+        <div class="petal p-center"></div>
+      </div>
+      <div class="stem">
+        <div class="leaf right"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Barra de Herramientas Inferior -->
+  <div class="bottom-bar">
+    <button class="btn-bottom" id="btnMusic">🎵 Música Relajante</button>
+    <button class="btn-bottom" id="btnRain">🌧️ Lluvia</button>
+    <button class="btn-bottom" id="btnAmbience">🐸 Ruido Nocturno</button>
+    <button class="btn-bottom btn-celebrate" id="btnCelebrate">🎉 ¡Celebrar!</button>
+  </div>
+
+  <!-- Modales / Cuadros de Mensaje -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-tag" id="modalTag">Concepto</div>
+      <div class="modal-text" id="modalText">Mensaje...</div>
+      <button class="btn-close" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal de Deseos -->
+  <div class="modal-overlay" id="wishModalOverlay">
+    <div class="modal-card">
+      <div class="modal-tag">✨ Muro de Deseos</div>
+      <div class="wishes-list" id="wishesList"></div>
+      <textarea class="wish-input" id="wishInput" placeholder="Escribe un deseo para el jardín..."></textarea>
+      <div style="display:flex; justify-content:center; gap:10px;">
+        <button class="btn-close" style="background:#8e24aa;" onclick="saveWish()">Guardar Deseo</button>
+        <button class="btn-close" onclick="closeWishModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* --- Mensajes de los Tulipanes y Dedicatoria --- */
+    const messages = {
+      pensar: {
+        tag: "Pensar",
+        text: "Y quizás aun que aveces dude de mi mismo contigo las cosas se hacen mas pasables y mis malos ratos pasan de largo, me gusta el como eres y de cierta manera aprendí a adorar tu caos lo cual no me disgusta ya que aprendí a que no siempre se puede controlar todo y hay que dejarse llevar."
+      },
+      alma: {
+        tag: "Alma",
+        text: "Podria decirte lo mucho que te aprecio pero darme el tiempo para hacerte este tipo de detalles para mi que la verdad es mucho mas que cualquier otro tipo de regalo que te pueda ofrecer."
+      },
+      cuerpo: {
+        tag: "Cuerpo",
+        text: "Aunque todavia no es tu cumpleaños me gustaria felicitarte por que eres una persona increible y de la cual estoy orgulloso de haberme reencontrado, y aun que aveces dudo de merecer a alguien tan grandiosa como tu me gusta la sensacion que me da saber que te gusta estar conmigo."
+      },
+      carta: {
+        tag: "Carta Especial 💌",
+        text: "Gracias por estos 6 meses de tu vida que me has regalado, te prometo que a partir de ahora buscaremos que sea más llevadero todo.\n\nTe quiero mucho y te quiero ver triunfar Uriel Glz Rdz"
+      }
+    };
+
+    /* --- Motor Canvas y Animaciones --- */
+    const canvas = document.getElementById('gardenCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Luciérnagas / Chispas
+    const fireflies = Array.from({ length: 45 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height * 0.8,
+      r: Math.random() * 2.5 + 1,
+      dx: (Math.random() - 0.5) * 0.8,
+      dy: (Math.random() - 0.5) * 0.8,
+      alpha: Math.random(),
+      da: (Math.random() - 0.5) * 0.02
+    }));
+
+    // Gotas de Lluvia
+    let isRaining = false;
+    const raindrops = Array.from({ length: 80 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      length: Math.random() * 18 + 10,
+      speed: Math.random() * 8 + 12
+    }));
+
+    // Mariposas
+    const butterflies = Array.from({ length: 3 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height * 0.5 + 100,
+      size: Math.random() * 8 + 10,
+      angle: Math.random() * Math.PI * 2,
+      speed: Math.random() * 1.5 + 0.8,
+      wingState: 0
+    }));
+
+    // Partículas de Confetti
+    let confetti = [];
+
+    function triggerConfetti() {
+      for (let i = 0; i < 90; i++) {
+        confetti.push({
+          x: width / 2,
+          y: height / 2,
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() - 0.8) * 14,
+          color: `hsl(${Math.random() * 360}, 90%, 65%)`,
+          size: Math.random() * 7 + 4,
+          rotation: Math.random() * 360,
+          rspeed: (Math.random() - 0.5) * 10
+        });
+      }
+    }
+
+    function animateCanvas() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Dibujar y mover Luciérnagas
+      fireflies.forEach(f => {
+        f.x += f.dx;
+        f.y += f.dy;
+        f.alpha += f.da;
+        if (f.alpha <= 0.1 || f.alpha >= 0.9) f.da *= -1;
+        if (f.x < 0 || f.x > width) f.dx *= -1;
+        if (f.y < 0 || f.y > height * 0.8) f.dy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 223, 128, ${f.alpha})`;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffd700';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // Dibujar Mariposas
+      butterflies.forEach(b => {
+        b.x += Math.cos(b.angle) * b.speed;
+        b.y += Math.sin(b.angle) * b.speed;
+        b.angle += (Math.random() - 0.5) * 0.1;
+        b.wingState += 0.15;
+
+        if (b.x < 50 || b.x > width - 50) b.angle = Math.PI - b.angle;
+        if (b.y < 50 || b.y > height * 0.7) b.angle = -b.angle;
+
+        const wingW = Math.sin(b.wingState) * b.size;
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.fillStyle = "rgba(236, 178, 255, 0.85)";
+        ctx.beginPath();
+        ctx.ellipse(-wingW/2, 0, Math.abs(wingW), b.size, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(wingW/2, 0, Math.abs(wingW), b.size, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Dibujar Lluvia si está activa
+      if (isRaining) {
+        ctx.strokeStyle = 'rgba(174, 194, 224, 0.4)';
+        ctx.lineWidth = 1.2;
+        raindrops.forEach(r => {
+          r.y += r.speed;
+          if (r.y > height) {
+            r.y = -20;
+            r.x = Math.random() * width;
+          }
+          ctx.beginPath();
+          ctx.moveTo(r.x, r.y);
+          ctx.lineTo(r.x - 2, r.y + r.length);
+          ctx.stroke();
+        });
+      }
+
+      // Dibujar y mover Confetti
+      confetti.forEach((c, idx) => {
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vy += 0.25; // Gravedad
+        c.rotation += c.rspeed;
+
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate((c.rotation * Math.PI) / 180);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
+        ctx.restore();
+
+        if (c.y > height) confetti.splice(idx, 1);
+      });
+
+      requestAnimationFrame(animateCanvas);
+    }
+    animateCanvas();
+
+    /* --- Audio Sintetizado (Web Audio API) --- */
+    let audioCtx = null;
+    let isMusicPlaying = false;
+    let musicInterval = null;
+    let isAmbiencePlaying = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playNote(freq, type = 'sine', duration = 1.5) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Música de Fondo Estilo Lullaby / Caja de Música
+    function toggleMusic() {
+      initAudio();
+      const btn = document.getElementById('btnMusic');
+      isMusicPlaying = !isMusicPlaying;
+
+      if (isMusicPlaying) {
+        btn.classList.add('active');
+        const notes = [261.63, 329.63, 392.00, 493.88, 523.25, 440.00, 349.23];
+        let step = 0;
+        musicInterval = setInterval(() => {
+          playNote(notes[step % notes.length], 'sine', 2);
+          step++;
+        }, 800);
+      } else {
+        btn.classList.remove('active');
+        clearInterval(musicInterval);
+      }
+    }
+
+    // Ruido Nocturno Sintetizado (Grillos)
+    function toggleAmbience() {
+      initAudio();
+      const btn = document.getElementById('btnAmbience');
+      isAmbiencePlaying = !isAmbiencePlaying;
+
+      if (isAmbiencePlaying) {
+        btn.classList.add('active');
+        this.cricketTimer = setInterval(() => {
+          if (Math.random() > 0.4) playNote(4500 + Math.random() * 500, 'triangle', 0.08);
+        }, 300);
+      } else {
+        btn.classList.remove('active');
+        clearInterval(this.cricketTimer);
+      }
+    }
+
+    /* --- Interacción de Modales y Tulipanes --- */
+    function openTulip(type) {
+      initAudio();
+      playNote(type === 'pensar' ? 329.63 : type === 'alma' ? 261.63 : 392.00, 'sine', 1.8);
+
+      // Efecto visual de florecimiento
+      const wrappers = document.querySelectorAll('.tulip-wrapper');
+      wrappers.forEach(w => w.classList.remove('bloomed'));
+      
+      const targetClass = type === 'pensar' ? '.tulip-left' : type === 'alma' ? '.tulip-center' : '.tulip-right';
+      const target = document.querySelector(targetClass);
+      if (target) target.classList.add('bloomed');
+
+      const modal = document.getElementById('modalOverlay');
+      document.getElementById('modalTag').innerText = messages[type].tag;
+      document.getElementById('modalText').innerText = messages[type].text;
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    /* --- Cuadro de Deseos --- */
+    function openWishModal() {
+      document.getElementById('wishModalOverlay').classList.add('active');
+      renderWishes();
+    }
+
+    function closeWishModal() {
+      document.getElementById('wishModalOverlay').classList.remove('active');
+    }
+
+    function saveWish() {
+      const input = document.getElementById('wishInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      const wishes = JSON.parse(localStorage.getItem('ediths_wishes') || '[]');
+      wishes.push({ text: val, date: new Date().toLocaleDateString() });
+      localStorage.setItem('ediths_wishes', JSON.stringify(wishes));
+
+      input.value = '';
+      renderWishes();
+      triggerConfetti();
+    }
+
+    function renderWishes() {
+      const wishes = JSON.parse(localStorage.getItem('ediths_wishes') || '[]');
+      const container = document.getElementById('wishesList');
+      if (wishes.length === 0) {
+        container.innerHTML = '<p style="font-size:0.85rem; opacity:0.6;">No hay deseos guardados aún. ¡Escribe el primero!</p>';
+        return;
+      }
+      container.innerHTML = wishes.map(w => `
+        <div class="wish-item">
+          <div>${w.text}</div>
+          <div class="wish-date">${w.date}</div>
+        </div>
+      `).join('');
+    }
+
+    /* --- Event Listeners --- */
+    document.getElementById('btnLetter').addEventListener('click', () => {
+      openTulip('carta');
+    });
+
+    document.getElementById('btnWish').addEventListener('click', openWishModal);
+
+    document.getElementById('btnTheme').addEventListener('click', () => {
+      document.body.classList.toggle('day-mode');
+    });
+
+    document.getElementById('btnRain').addEventListener('click', function() {
+      isRaining = !isRaining;
+      this.classList.toggle('active', isRaining);
+    });
+
+    document.getElementById('btnMusic').addEventListener('click', toggleMusic);
+    document.getElementById('btnAmbience').addEventListener('click', toggleAmbience);
+    document.getElementById('btnCelebrate').addEventListener('click', triggerConfetti);
+  </script>
+</body>
+</html>
