@@ -1,681 +1,851 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edith's Garden</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Canvas Confetti Library -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Great+Vibes&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edith's Garden 🌸</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0d0614 0%, #1a0b2e 40%, #0d1b1e 80%, #051014 100%);
+      --park-grass: linear-gradient(to top, #0a1f18 0%, #143527 50%, rgba(20, 53, 39, 0) 100%);
+      --accent-gold: #ffd700;
+      --modal-bg: rgba(20, 10, 30, 0.92);
+      --card-border: rgba(255, 215, 0, 0.3);
+    }
 
-    <style>
-        :root {
-            --font-title: 'Cinzel', serif;
-            --font-cursive: 'Great Vibes', cursive;
-            --font-body: 'Montserrat', sans-serif;
-        }
+    body.day-mode {
+      --bg-gradient: linear-gradient(135deg, #2d1436 0%, #4a1c40 30%, #682d49 60%, #3a405a 100%);
+      --park-grass: linear-gradient(to top, #1b3a2b 0%, #2a523d 50%, rgba(42, 82, 61, 0) 100%);
+      --modal-bg: rgba(40, 20, 45, 0.94);
+    }
 
-        body {
-            font-family: var(--font-body);
-            overflow-x: hidden;
-            background: #081c15;
-            color: #f8fafc;
-            user-select: none;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
 
-        .title-font { font-family: var(--font-title); }
-        .cursive-font { font-family: var(--font-cursive); }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Georgia', 'Segoe UI', serif;
+      background: var(--bg-gradient);
+      color: #fff;
+      transition: background 1.5s ease;
+    }
 
-        /* Atmospheric Gradient Background: Park at dusk with emerald greens and mystical purples */
-        .bg-park-gradient {
-            background: radial-gradient(circle at 50% 30%, #3b0764 0%, #1e1b4b 35%, #064e3b 75%, #022c22 100%);
-        }
+    /* Canvas para efectos */
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
 
-        /* Gentle Swaying Animations for Flowers */
-        @keyframes swayLeft {
-            0%, 100% { transform: rotate(-1.5deg); }
-            50% { transform: rotate(2deg); }
-        }
-        @keyframes swayCenter {
-            0%, 100% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(-1deg) scale(1.02); }
-        }
-        @keyframes swayRight {
-            0%, 100% { transform: rotate(1.5deg); }
-            50% { transform: rotate(-2deg); }
-        }
+    /* Encabezado */
+    header {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      z-index: 10;
+      pointer-events: auto;
+    }
 
-        .tulip-sway-left { animation: swayLeft 6s ease-in-out infinite; transform-origin: bottom center; }
-        .tulip-sway-center { animation: swayCenter 5.5s ease-in-out infinite; transform-origin: bottom center; }
-        .tulip-sway-right { animation: swayRight 6.5s ease-in-out infinite; transform-origin: bottom center; }
+    h1.title {
+      font-size: 2.5rem;
+      letter-spacing: 3px;
+      color: #fce4ec;
+      text-shadow: 0 0 15px rgba(255, 182, 193, 0.8), 0 0 30px rgba(186, 85, 211, 0.6);
+      font-weight: 300;
+      margin-bottom: 5px;
+    }
 
-        /* Glowing Effects */
-        .glow-burgundy { filter: drop-shadow(0 0 22px rgba(153, 27, 27, 0.75)) drop-shadow(0 0 40px rgba(88, 28, 135, 0.55)); }
-        .glow-gradient-left { filter: drop-shadow(0 0 18px rgba(236, 72, 153, 0.6)) drop-shadow(0 0 30px rgba(168, 85, 247, 0.4)); }
-        .glow-gradient-right { filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.6)) drop-shadow(0 0 30px rgba(239, 68, 68, 0.4)); }
+    p.subtitle {
+      font-size: 0.95rem;
+      color: #d1c4e9;
+      font-style: italic;
+      letter-spacing: 1px;
+      opacity: 0.85;
+    }
 
-        /* Glassmorphism Modal Cards and Controls */
-        .glass-card {
-            background: rgba(15, 23, 42, 0.78);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(168, 85, 247, 0.2);
-        }
+    /* Barra Superior de Herramientas */
+    .top-controls {
+      position: absolute;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+    }
 
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-        }
+    .btn-top {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
 
-        /* Soft Floating Effect for Badges */
-        @keyframes floatBadge {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-        }
-        .float-badge { animation: floatBadge 3.5s ease-in-out infinite; }
+    .btn-top:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: var(--accent-gold);
+      transform: translateY(-2px);
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+    }
 
-        /* Firefly glowing light particles */
-        @keyframes pulseLight {
-            0%, 100% { opacity: 0.3; transform: scale(0.9); }
-            50% { opacity: 0.8; transform: scale(1.1); }
-        }
-        .firefly-glow { animation: pulseLight 4s ease-in-out infinite; }
-    </style>
+    /* Contenedor del Parque */
+    .park-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 75%;
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      padding: 0 10% 80px 10%;
+      background: var(--park-grass);
+      z-index: 2;
+    }
+
+    /* Estructura del Tulipán */
+    .tulip-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .tulip-wrapper:hover {
+      transform: scale(1.06) translateY(-5px);
+    }
+
+    .tag-label {
+      background: rgba(15, 5, 25, 0.75);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      color: #ffe0b2;
+      padding: 5px 14px;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .stem {
+      width: 8px;
+      height: 180px;
+      background: linear-gradient(to right, #2e7d32, #4caf50, #1b5e20);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .leaf {
+      position: absolute;
+      width: 45px;
+      height: 90px;
+      background: linear-gradient(135deg, #388e3c, #1b5e20);
+      border-radius: 0 100px 0 100px;
+      top: 50%;
+    }
+
+    .leaf.left {
+      left: -40px;
+      transform: rotate(-25deg);
+    }
+
+    .leaf.right {
+      right: -40px;
+      transform: scaleX(-1) rotate(-25deg);
+    }
+
+    /* Pétalos del Tulipán */
+    .flower-head {
+      position: relative;
+      width: 80px;
+      height: 90px;
+      margin-bottom: -5px;
+      transition: transform 0.5s ease;
+    }
+
+    .petal {
+      position: absolute;
+      bottom: 0;
+      width: 45px;
+      height: 85px;
+      border-radius: 50% 50% 50% 50% / 80% 80% 20% 20%;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Tulipán Izquierda - Degradado Púrpura/Rosa */
+    .tulip-left .p-left {
+      background: linear-gradient(to top, #4a148c, #ab47bc);
+      left: 5px;
+      transform: rotate(-12deg);
+    }
+    .tulip-left .p-right {
+      background: linear-gradient(to top, #6a1b9a, #ce93d8);
+      right: 5px;
+      transform: rotate(12deg);
+    }
+    .tulip-left .p-center {
+      background: linear-gradient(to top, #8e24aa, #f3e5f5);
+      left: 17.5px;
+      height: 90px;
+    }
+
+    /* Tulipán Centro - Tinto Oscuro / Rojo Plegado */
+    .tulip-center .p-left {
+      background: linear-gradient(to top, #310008, #880e4f);
+      left: 5px;
+      transform: rotate(-10deg);
+    }
+    .tulip-center .p-right {
+      background: linear-gradient(to top, #4a000d, #ad1457);
+      right: 5px;
+      transform: rotate(10deg);
+    }
+    .tulip-center .p-center {
+      background: linear-gradient(to top, #58000c, #c2185b);
+      left: 17.5px;
+      height: 92px;
+    }
+
+    /* Tulipán Derecha - Degradado Fuego/Melocotón */
+    .tulip-right .p-left {
+      background: linear-gradient(to top, #b71c1c, #ff7043);
+      left: 5px;
+      transform: rotate(-12deg);
+    }
+    .tulip-right .p-right {
+      background: linear-gradient(to top, #c62828, #ffb74d);
+      right: 5px;
+      transform: rotate(12deg);
+    }
+    .tulip-right .p-center {
+      background: linear-gradient(to top, #d32f2f, #ffe0b2);
+      left: 17.5px;
+      height: 90px;
+    }
+
+    /* Estado Florecido (Apertura) */
+    .tulip-wrapper.bloomed .flower-head {
+      transform: scale(1.1);
+    }
+    .tulip-wrapper.bloomed .p-left {
+      transform: rotate(-28deg) translateX(-8px);
+    }
+    .tulip-wrapper.bloomed .p-right {
+      transform: rotate(28deg) translateX(8px);
+    }
+    .tulip-wrapper.bloomed .p-center {
+      transform: scaleY(1.05);
+    }
+
+    /* Resplandor */
+    .glow {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+      top: -10px;
+      left: -10px;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: pulse 3s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.4; }
+      100% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    /* Barra Inferior de Audio / Efectos */
+    .bottom-bar {
+      position: absolute;
+      bottom: 15px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      z-index: 10;
+      flex-wrap: wrap;
+      padding: 0 10px;
+    }
+
+    .btn-bottom {
+      background: rgba(15, 10, 25, 0.8);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      color: #e0e0e0;
+      padding: 9px 18px;
+      border-radius: 25px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-bottom:hover, .btn-bottom.active {
+      background: rgba(255, 215, 0, 0.2);
+      border-color: #ffd700;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+    }
+
+    .btn-celebrate {
+      background: linear-gradient(135deg, #8e24aa, #d81b60);
+      border: none;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .btn-celebrate:hover {
+      background: linear-gradient(135deg, #ab47bc, #ad1457);
+      transform: scale(1.05);
+    }
+
+    /* Modal / Ventanas Emergentes */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--modal-bg);
+      border: 1px solid var(--card-border);
+      padding: 30px 25px;
+      border-radius: 20px;
+      max-width: 480px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(255, 215, 0, 0.2);
+      transform: translateY(20px) scale(0.95);
+      transition: transform 0.4s ease;
+      position: relative;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-tag {
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      color: #ffd700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .modal-text {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #f3e5f5;
+      margin-bottom: 25px;
+      font-style: italic;
+    }
+
+    .btn-close {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 8px 25px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: #ffd700;
+    }
+
+    /* Estilos del Cuadro de Deseos */
+    .wish-input {
+      width: 100%;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      color: #fff;
+      padding: 10px;
+      font-family: inherit;
+      resize: none;
+      margin-bottom: 15px;
+      outline: none;
+    }
+
+    .wish-input:focus {
+      border-color: #ffd700;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    }
+
+    .wishes-list {
+      max-height: 120px;
+      overflow-y: auto;
+      text-align: left;
+      margin-bottom: 15px;
+      padding-right: 5px;
+    }
+
+    .wish-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid #ffd700;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+    }
+
+    .wish-date {
+      font-size: 0.7rem;
+      color: #b39ddb;
+      margin-top: 3px;
+    }
+  </style>
 </head>
-<body class="relative min-h-screen w-screen flex flex-col justify-between bg-park-gradient overflow-x-hidden">
+<body>
 
-    <canvas id="parkParticleCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
-    <canvas id="rainCanvas" class="absolute inset-0 pointer-events-none z-0 transition-opacity duration-700 opacity-0"></canvas>
+  <!-- Canvas Animado para Luciérnagas, Lluvia, Mariposas y Confetti -->
+  <canvas id="gardenCanvas"></canvas>
 
-    <!-- Park Ambient Light Blobs -->
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] pointer-events-none firefly-glow"></div>
-    <div class="absolute bottom-1/3 right-1/4 w-96 h-96 bg-emerald-600/20 rounded-full blur-[120px] pointer-events-none firefly-glow" style="animation-delay: 2s;"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-900/20 rounded-full blur-[140px] pointer-events-none"></div>
+  <!-- Encabezado -->
+  <header>
+    <h1 class="title">Edith's Garden</h1>
+    <p class="subtitle">Un rincón de paz e intuición</p>
+  </header>
 
-    <!-- Header Section -->
-    <header class="relative z-10 pt-6 md:pt-8 text-center px-4">
-        <div class="inline-block relative">
-            <span class="cursive-font text-amber-300/80 text-2xl md:text-3xl block -mb-2">Bienvenido a</span>
-            <h1 class="title-font text-4xl sm:text-5xl md:text-6xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-purple-200 to-rose-200 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
-                Edith's Garden
-            </h1>
-            <div class="h-0.5 w-3/4 mx-auto bg-gradient-to-r from-transparent via-purple-400/50 to-transparent mt-2"></div>
-        </div>
-        <p class="text-xs sm:text-sm text-emerald-200/80 mt-2.5 font-light tracking-widest uppercase">
-            Haz clic en cada tulipán para descubrir los mensajes del alma
-        </p>
-    </header>
+  <!-- Control de Ambiente Superior -->
+  <div class="top-controls">
+    <button class="btn-top" id="btnLetter">💌 Carta Especial</button>
+    <button class="btn-top" id="btnWish">✨ Guardar Deseo</button>
+    <button class="btn-top" id="btnTheme">🌙 Modo Día/Noche</button>
+  </div>
 
-    <!-- Main Garden Display -->
-    <main class="relative z-10 flex-grow flex items-end justify-center px-2 sm:px-8 pb-6 md:pb-8 max-w-7xl mx-auto w-full">
-        
-        <div class="grid grid-cols-3 gap-1 sm:gap-6 md:gap-12 items-end w-full max-w-5xl mx-auto">
-
-            <!-- ================= LEFT TULIP (PENSAR) ================= -->
-            <div class="flex flex-col items-center group cursor-pointer" onclick="openTulipModal('left')">
-                <div class="float-badge mb-3 px-3 py-1 sm:px-5 sm:py-1.5 rounded-full bg-purple-950/70 border border-purple-400/30 text-purple-200 text-xs sm:text-sm md:text-base font-medium tracking-widest shadow-lg backdrop-blur-md group-hover:scale-110 group-hover:bg-purple-900/80 group-hover:border-purple-300 transition-all duration-300 flex items-center gap-1.5">
-                    <i class="fa-solid fa-sparkles text-purple-300 text-xs"></i>
-                    <span class="title-font">Pensar</span>
-                </div>
-
-                <div class="relative tulip-sway-left w-full max-w-[120px] sm:max-w-[180px] md:max-w-[220px]">
-                    <svg class="w-full h-auto glow-gradient-left transition-transform duration-500 group-hover:scale-105" viewBox="0 0 200 350" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="gradLeftOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#ec4899" />
-                                <stop offset="100%" stop-color="#7e22ce" />
-                            </linearGradient>
-                            <linearGradient id="gradLeftInner" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#f472b6" />
-                                <stop offset="100%" stop-color="#a855f7" />
-                            </linearGradient>
-                            <linearGradient id="gradLeftCenter" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stop-color="#fbcfe8" />
-                                <stop offset="100%" stop-color="#db2777" />
-                            </linearGradient>
-                            <linearGradient id="stemLeft" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#059669" />
-                                <stop offset="100%" stop-color="#022c22" />
-                            </linearGradient>
-                        </defs>
-                        <path d="M100 150 Q90 240 100 340" stroke="url(#stemLeft)" stroke-width="7" stroke-linecap="round"/>
-                        <path d="M98 250 C60 240 30 200 20 160 C40 200 75 240 98 260 Z" fill="#059669" opacity="0.9"/>
-                        <path d="M102 270 C140 260 170 230 180 190 C160 225 125 260 102 280 Z" fill="#10b981" opacity="0.8"/>
-                        <g id="leftFlowerHead" class="transition-transform duration-500 origin-bottom">
-                            <path d="M100 30 C65 45 40 85 50 130 C55 155 75 170 100 170 C125 170 145 155 150 130 C160 85 135 45 100 30 Z" fill="url(#gradLeftOuter)"/>
-                            <path id="leftPetalL" d="M100 35 C68 55 42 95 60 135 C72 160 90 165 100 160 C90 130 88 95 100 35 Z" fill="url(#gradLeftInner)"/>
-                            <path id="leftPetalR" d="M100 35 C132 55 158 95 140 135 C128 160 110 165 100 160 C110 130 112 95 100 35 Z" fill="url(#gradLeftInner)"/>
-                            <path id="leftPetalC" d="M100 30 C80 60 70 100 80 135 C90 160 100 168 100 168 C100 168 110 160 120 135 C130 100 120 60 100 30 Z" fill="url(#gradLeftCenter)"/>
-                        </g>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- ================= CENTER TULIP (ALMA - Dark Burgundy) ================= -->
-            <div class="flex flex-col items-center group cursor-pointer" onclick="openTulipModal('center')">
-                <div class="float-badge mb-3 px-4 py-1.5 sm:px-6 sm:py-2 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs sm:text-sm md:text-base font-semibold tracking-widest shadow-xl backdrop-blur-md group-hover:scale-110 group-hover:bg-rose-900/90 group-hover:border-rose-400 transition-all duration-300 flex items-center gap-2">
-                    <i class="fa-solid fa-heart text-rose-400 text-xs"></i>
-                    <span class="title-font">Alma</span>
-                </div>
-
-                <div class="relative tulip-sway-center w-full max-w-[140px] sm:max-w-[210px] md:max-w-[250px]">
-                    <svg class="w-full h-auto glow-burgundy transition-transform duration-500 group-hover:scale-105" viewBox="0 0 200 370" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="gradCenterOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#881337" />
-                                <stop offset="50%" stop-color="#4c0519" />
-                                <stop offset="100%" stop-color="#1f020a" />
-                            </linearGradient>
-                            <linearGradient id="gradCenterInner" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#9f1239" />
-                                <stop offset="70%" stop-color="#581c87" />
-                                <stop offset="100%" stop-color="#3b0764" />
-                            </linearGradient>
-                            <linearGradient id="gradCenterCore" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stop-color="#f43f5e" />
-                                <stop offset="60%" stop-color="#be123c" />
-                                <stop offset="100%" stop-color="#4c0519" />
-                            </linearGradient>
-                            <linearGradient id="stemCenter" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#047857" />
-                                <stop offset="100%" stop-color="#064e3b" />
-                            </linearGradient>
-                        </defs>
-                        <path d="M100 160 Q105 250 100 360" stroke="url(#stemCenter)" stroke-width="8.5" stroke-linecap="round"/>
-                        <path d="M97 270 C50 260 20 215 10 170 C30 215 70 255 97 280 Z" fill="#047857" opacity="0.95"/>
-                        <path d="M103 285 C150 275 180 230 190 185 C170 230 130 270 103 295 Z" fill="#059669" opacity="0.9"/>
-                        <g id="centerFlowerHead" class="transition-transform duration-500 origin-bottom">
-                            <path d="M100 20 C60 38 32 80 42 130 C48 158 72 175 100 175 C128 175 152 158 158 130 C168 80 140 38 100 20 Z" fill="url(#gradCenterOuter)"/>
-                            <path id="centerPetalL" d="M100 25 C64 48 36 92 56 136 C70 162 90 168 100 162 C88 130 86 92 100 25 Z" fill="url(#gradCenterInner)"/>
-                            <path id="centerPetalR" d="M100 25 C136 48 164 92 144 136 C130 162 110 168 100 162 C112 130 114 92 100 25 Z" fill="url(#gradCenterInner)"/>
-                            <path id="centerPetalC" d="M100 20 C78 55 66 98 78 136 C88 162 100 172 100 172 C100 172 112 162 122 136 C134 98 122 55 100 20 Z" fill="url(#gradCenterCore)"/>
-                        </g>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- ================= RIGHT TULIP (CUERPO) ================= -->
-            <div class="flex flex-col items-center group cursor-pointer" onclick="openTulipModal('right')">
-                <div class="float-badge mb-3 px-3 py-1 sm:px-5 sm:py-1.5 rounded-full bg-amber-950/70 border border-amber-400/30 text-amber-200 text-xs sm:text-sm md:text-base font-medium tracking-widest shadow-lg backdrop-blur-md group-hover:scale-110 group-hover:bg-amber-900/80 group-hover:border-amber-300 transition-all duration-300 flex items-center gap-1.5">
-                    <i class="fa-solid fa-hands-holding-heart text-amber-300 text-xs"></i>
-                    <span class="title-font">Cuerpo</span>
-                </div>
-
-                <div class="relative tulip-sway-right w-full max-w-[120px] sm:max-w-[180px] md:max-w-[220px]">
-                    <svg class="w-full h-auto glow-gradient-right transition-transform duration-500 group-hover:scale-105" viewBox="0 0 200 350" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="gradRightOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#f59e0b" />
-                                <stop offset="100%" stop-color="#b91c1c" />
-                            </linearGradient>
-                            <linearGradient id="gradRightInner" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#fbbf24" />
-                                <stop offset="100%" stop-color="#ef4444" />
-                            </linearGradient>
-                            <linearGradient id="gradRightCenter" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stop-color="#fef08a" />
-                                <stop offset="100%" stop-color="#f97316" />
-                            </linearGradient>
-                            <linearGradient id="stemRight" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#059669" />
-                                <stop offset="100%" stop-color="#022c22" />
-                            </linearGradient>
-                        </defs>
-                        <path d="M100 150 Q110 240 100 340" stroke="url(#stemRight)" stroke-width="7" stroke-linecap="round"/>
-                        <path d="M98 250 C60 240 30 200 20 160 C40 200 75 240 98 260 Z" fill="#059669" opacity="0.9"/>
-                        <path d="M102 270 C140 260 170 230 180 190 C160 225 125 260 102 280 Z" fill="#10b981" opacity="0.8"/>
-                        <g id="rightFlowerHead" class="transition-transform duration-500 origin-bottom">
-                            <path d="M100 30 C65 45 40 85 50 130 C55 155 75 170 100 170 C125 170 145 155 150 130 C160 85 135 45 100 30 Z" fill="url(#gradRightOuter)"/>
-                            <path id="rightPetalL" d="M100 35 C68 55 42 95 60 135 C72 160 90 165 100 160 C90 130 88 95 100 35 Z" fill="url(#gradRightInner)"/>
-                            <path id="rightPetalR" d="M100 35 C132 55 158 95 140 135 C128 160 110 165 100 160 C110 130 112 95 100 35 Z" fill="url(#gradRightInner)"/>
-                            <path id="rightPetalC" d="M100 30 C80 60 70 100 80 135 C90 160 100 168 100 168 C100 168 110 160 120 135 C130 100 120 60 100 30 Z" fill="url(#gradRightCenter)"/>
-                        </g>
-                    </svg>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- Interactive Control Panel Footer -->
-    <footer class="relative z-20 pb-6 pt-2 text-center px-4">
-        <div class="glass-panel max-w-2xl mx-auto rounded-full px-4 sm:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-center gap-3 sm:gap-6 shadow-2xl">
-            
-            <!-- Rain Toggle Button -->
-            <button id="rainBtn" onclick="toggleRain()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-slate-800/80 hover:bg-slate-700/80 text-sky-300 border border-sky-500/30 text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 transform active:scale-95">
-                <i class="fa-solid fa-cloud-showers-heavy text-sky-400"></i>
-                <span>Lluvia</span>
-                <span id="rainBadge" class="w-2 h-2 rounded-full bg-slate-500"></span>
-            </button>
-
-            <!-- Nature Night Ambience Toggle -->
-            <button id="ambientBtn" onclick="toggleAmbient()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-slate-800/80 hover:bg-slate-700/80 text-emerald-300 border border-emerald-500/30 text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 transform active:scale-95">
-                <i class="fa-solid fa-bugs text-emerald-400"></i>
-                <span>Ruido de Fondo</span>
-                <span id="ambientBadge" class="w-2 h-2 rounded-full bg-slate-500"></span>
-            </button>
-
-            <!-- Celebrate Button -->
-            <button onclick="triggerCelebration()" class="px-5 py-1.5 sm:px-6 sm:py-2 rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:from-amber-400 hover:via-rose-400 hover:to-purple-500 text-white font-semibold text-xs sm:text-sm tracking-wider uppercase shadow-lg shadow-rose-900/40 border border-white/20 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center gap-2">
-                <i class="fa-solid fa-wand-magic-sparkles text-amber-200"></i>
-                <span>¡Celebrar!</span>
-            </button>
-
-        </div>
-
-        <div class="mt-3 text-xs text-slate-400 font-light tracking-wide">
-            Edith's Garden &bull; Un espacio de afecto y calma
-        </div>
-    </footer>
-
-    <!-- Message Popup Modal -->
-    <div id="tulipModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-slate-950/70 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-500">
-        <div id="modalCard" class="glass-card max-w-lg w-full rounded-2xl p-6 sm:p-8 relative transform scale-90 transition-transform duration-500 border border-purple-500/30 text-center">
-            
-            <!-- Close Button -->
-            <button onclick="closeTulipModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
-            <!-- Header Icon -->
-            <div id="modalIconContainer" class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl shadow-lg border">
-                <i id="modalIcon" class="fa-solid fa-heart"></i>
-            </div>
-
-            <!-- Concept Label -->
-            <span id="modalConcept" class="title-font uppercase tracking-widest text-xs sm:text-sm text-purple-300 block mb-2 font-bold">Concept</span>
-
-            <!-- Main Message Text -->
-            <p id="modalText" class="text-sm sm:text-base md:text-lg leading-relaxed text-slate-100 font-light italic my-4 px-2 sm:px-4">
-                Message Content
-            </p>
-
-            <div class="h-0.5 w-24 mx-auto bg-gradient-to-r from-transparent via-purple-400/40 to-transparent my-5"></div>
-
-            <!-- Action Button -->
-            <button onclick="closeTulipModal()" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-medium text-xs sm:text-sm tracking-wider uppercase shadow-lg transition-all transform hover:scale-105 active:scale-95">
-                Guardar en el corazón
-            </button>
-        </div>
+  <!-- Escenario del Parque con los 3 Tulipanes -->
+  <div class="park-container">
+    
+    <!-- Tulipán Izquierdo (Pensar) -->
+    <div class="tulip-wrapper tulip-left" onclick="openTulip('pensar')">
+      <div class="tag-label">Pensar</div>
+      <div class="flower-head">
+        <div class="glow"></div>
+        <div class="petal p-left"></div>
+        <div class="petal p-right"></div>
+        <div class="petal p-center"></div>
+      </div>
+      <div class="stem">
+        <div class="leaf left"></div>
+      </div>
     </div>
 
-    <script>
-        // Data structure for the three flowers and their exact text messages
-        const tulipData = {
-            left: {
-                concept: "Pensar",
-                icon: "fa-sparkles",
-                iconBg: "bg-purple-900/60 border-purple-400/40 text-purple-300",
-                text: "Y quizas aun que aveces dude de mi mismo contigo las cosas se hacen mas pasables y mis malos ratos pasan de largo, me gusta el como eres y de cierta manera aprendi a adorar tu caos lo cual no me disgusta ya que aprendi a que no siempre se puede controlar todo y hay que dejarse llevar",
-                colorBurst: ['#ec4899', '#a855f7', '#f472b6', '#ffffff']
-            },
-            center: {
-                concept: "Alma",
-                icon: "fa-heart",
-                iconBg: "bg-rose-900/60 border-rose-400/40 text-rose-300",
-                text: "Podria decirte lo mucho que te aprecio pero darme el tiempo para hacerte este tipo de detalles para mi que la verdad es mucho mas que cualquier otro tipo de regalo que te pueda ofrecer",
-                colorBurst: ['#be123c', '#9f1239', '#f43f5e', '#fb7185', '#ffffff']
-            },
-            right: {
-                concept: "Cuerpo",
-                icon: "fa-hands-holding-heart",
-                iconBg: "bg-amber-900/60 border-amber-400/40 text-amber-300",
-                text: "Aunque todavia no es tu cumpleaños me gustaria felicitarte por que eres una persona increible y de la cual estoy orgulloso de haberme reencontrado, y aun que aveces dudo de merecer a alguien tan grandiosa como tu me gusta la sensacion que me da saber que te gusta estar conmigo",
-                colorBurst: ['#f59e0b', '#ef4444', '#fde047', '#ffffff']
-            }
-        };
+    <!-- Tulipán Central (Alma - Rojo Tinto Oscuro) -->
+    <div class="tulip-wrapper tulip-center" onclick="openTulip('alma')">
+      <div class="tag-label">Alma</div>
+      <div class="flower-head">
+        <div class="glow"></div>
+        <div class="petal p-left"></div>
+        <div class="petal p-right"></div>
+        <div class="petal p-center"></div>
+      </div>
+      <div class="stem">
+        <div class="leaf left"></div>
+        <div class="leaf right"></div>
+      </div>
+    </div>
 
-        // Firefly Background Canvas System
-        const canvas = document.getElementById('parkParticleCanvas');
-        const ctx = canvas.getContext('2d');
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
+    <!-- Tulipán Derecho (Cuerpo) -->
+    <div class="tulip-wrapper tulip-right" onclick="openTulip('cuerpo')">
+      <div class="tag-label">Cuerpo</div>
+      <div class="flower-head">
+        <div class="glow"></div>
+        <div class="petal p-left"></div>
+        <div class="petal p-right"></div>
+        <div class="petal p-center"></div>
+      </div>
+      <div class="stem">
+        <div class="leaf right"></div>
+      </div>
+    </div>
 
-        window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            rainCanvas.width = width;
-            rainCanvas.height = height;
+  </div>
+
+  <!-- Barra de Herramientas Inferior -->
+  <div class="bottom-bar">
+    <button class="btn-bottom" id="btnMusic">🎵 Música Relajante</button>
+    <button class="btn-bottom" id="btnRain">🌧️ Lluvia</button>
+    <button class="btn-bottom" id="btnAmbience">🐸 Ruido Nocturno</button>
+    <button class="btn-bottom btn-celebrate" id="btnCelebrate">🎉 ¡Celebrar!</button>
+  </div>
+
+  <!-- Modales / Cuadros de Mensaje -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-tag" id="modalTag">Concepto</div>
+      <div class="modal-text" id="modalText">Mensaje...</div>
+      <button class="btn-close" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal de Deseos -->
+  <div class="modal-overlay" id="wishModalOverlay">
+    <div class="modal-card">
+      <div class="modal-tag">✨ Muro de Deseos</div>
+      <div class="wishes-list" id="wishesList"></div>
+      <textarea class="wish-input" id="wishInput" placeholder="Escribe un deseo para el jardín..."></textarea>
+      <div style="display:flex; justify-content:center; gap:10px;">
+        <button class="btn-close" style="background:#8e24aa;" onclick="saveWish()">Guardar Deseo</button>
+        <button class="btn-close" onclick="closeWishModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* --- Mensajes de los Tulipanes y Dedicatoria --- */
+    const messages = {
+      pensar: {
+        tag: "Pensar",
+        text: "Y quizás aun que aveces dude de mi mismo contigo las cosas se hacen mas pasables y mis malos ratos pasan de largo, me gusta el como eres y de cierta manera aprendí a adorar tu caos lo cual no me disgusta ya que aprendí a que no siempre se puede controlar todo y hay que dejarse llevar."
+      },
+      alma: {
+        tag: "Alma",
+        text: "Podria decirte lo mucho que te aprecio pero darme el tiempo para hacerte este tipo de detalles para mi que la verdad es mucho mas que cualquier otro tipo de regalo que te pueda ofrecer."
+      },
+      cuerpo: {
+        tag: "Cuerpo",
+        text: "Aunque todavia no es tu cumpleaños me gustaria felicitarte por que eres una persona increible y de la cual estoy orgulloso de haberme reencontrado, y aun que aveces dudo de merecer a alguien tan grandiosa como tu me gusta la sensacion que me da saber que te gusta estar conmigo."
+      },
+      carta: {
+        tag: "Carta Especial 💌",
+        text: "Gracias por estos 6 meses de tu vida que me has regalado, te prometo que a partir de ahora buscaremos que sea más llevadero todo.\n\nTe quiero mucho y te quiero ver triunfar Uriel Glz Rdz"
+      }
+    };
+
+    /* --- Motor Canvas y Animaciones --- */
+    const canvas = document.getElementById('gardenCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Luciérnagas / Chispas
+    const fireflies = Array.from({ length: 45 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height * 0.8,
+      r: Math.random() * 2.5 + 1,
+      dx: (Math.random() - 0.5) * 0.8,
+      dy: (Math.random() - 0.5) * 0.8,
+      alpha: Math.random(),
+      da: (Math.random() - 0.5) * 0.02
+    }));
+
+    // Gotas de Lluvia
+    let isRaining = false;
+    const raindrops = Array.from({ length: 80 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      length: Math.random() * 18 + 10,
+      speed: Math.random() * 8 + 12
+    }));
+
+    // Mariposas
+    const butterflies = Array.from({ length: 3 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height * 0.5 + 100,
+      size: Math.random() * 8 + 10,
+      angle: Math.random() * Math.PI * 2,
+      speed: Math.random() * 1.5 + 0.8,
+      wingState: 0
+    }));
+
+    // Partículas de Confetti
+    let confetti = [];
+
+    function triggerConfetti() {
+      for (let i = 0; i < 90; i++) {
+        confetti.push({
+          x: width / 2,
+          y: height / 2,
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() - 0.8) * 14,
+          color: `hsl(${Math.random() * 360}, 90%, 65%)`,
+          size: Math.random() * 7 + 4,
+          rotation: Math.random() * 360,
+          rspeed: (Math.random() - 0.5) * 10
         });
+      }
+    }
 
-        class Particle {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * width;
-                this.y = height + Math.random() * 50;
-                this.size = Math.random() * 3 + 1;
-                this.speedY = Math.random() * 0.7 + 0.2;
-                this.speedX = (Math.random() - 0.5) * 0.4;
-                this.opacity = Math.random() * 0.6 + 0.2;
-                const colors = ['#f472b6', '#c084fc', '#34d399', '#fde047'];
-                this.color = colors[Math.floor(Math.random() * colors.length)];
-            }
-            update() {
-                this.y -= this.speedY;
-                this.x += Math.sin(this.y * 0.01) * 0.3 + this.speedX;
-                if (this.y < -10) this.reset();
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = this.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
+    function animateCanvas() {
+      ctx.clearRect(0, 0, width, height);
 
-        const fireflies = Array.from({ length: 45 }, () => new Particle());
+      // Dibujar y mover Luciérnagas
+      fireflies.forEach(f => {
+        f.x += f.dx;
+        f.y += f.dy;
+        f.alpha += f.da;
+        if (f.alpha <= 0.1 || f.alpha >= 0.9) f.da *= -1;
+        if (f.x < 0 || f.x > width) f.dx *= -1;
+        if (f.y < 0 || f.y > height * 0.8) f.dy *= -1;
 
-        function animateCanvas() {
-            ctx.clearRect(0, 0, width, height);
-            fireflies.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            requestAnimationFrame(animateCanvas);
-        }
-        animateCanvas();
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 223, 128, ${f.alpha})`;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffd700';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
 
-        // Web Audio API Sound Synthesizer (No external audio assets needed)
-        let audioCtx = null;
-        let rainNoiseNode = null;
-        let rainGain = null;
-        let ambientGain = null;
-        let ambientInterval = null;
-        let isRainActive = false;
-        let isAmbientActive = false;
+      // Dibujar Mariposas
+      butterflies.forEach(b => {
+        b.x += Math.cos(b.angle) * b.speed;
+        b.y += Math.sin(b.angle) * b.speed;
+        b.angle += (Math.random() - 0.5) * 0.1;
+        b.wingState += 0.15;
 
-        function initAudioContext() {
-            if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }
+        if (b.x < 50 || b.x > width - 50) b.angle = Math.PI - b.angle;
+        if (b.y < 50 || b.y > height * 0.7) b.angle = -b.angle;
 
-        // Synthesize Realistic Soft Rain Audio
-        function startRainAudio() {
-            initAudioContext();
-            const bufferSize = audioCtx.sampleRate * 2;
-            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const output = noiseBuffer.getChannelData(0);
-            
-            // Pink/brownish soft noise generation
-            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-            for (let i = 0; i < bufferSize; i++) {
-                let white = Math.random() * 2 - 1;
-                b0 = 0.99886 * b0 + white * 0.0555179;
-                b1 = 0.99332 * b1 + white * 0.0750759;
-                b2 = 0.96900 * b2 + white * 0.1538520;
-                b3 = 0.86650 * b3 + white * 0.3104856;
-                b4 = 0.55000 * b4 + white * 0.5329522;
-                b5 = -0.7616 * b5 - white * 0.0168980;
-                output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-                output[i] *= 0.03;
-                b6 = white * 0.115926;
-            }
+        const wingW = Math.sin(b.wingState) * b.size;
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.fillStyle = "rgba(236, 178, 255, 0.85)";
+        ctx.beginPath();
+        ctx.ellipse(-wingW/2, 0, Math.abs(wingW), b.size, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(wingW/2, 0, Math.abs(wingW), b.size, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
 
-            rainNoiseNode = audioCtx.createBufferSource();
-            rainNoiseNode.buffer = noiseBuffer;
-            rainNoiseNode.loop = true;
+      // Dibujar Lluvia si está activa
+      if (isRaining) {
+        ctx.strokeStyle = 'rgba(174, 194, 224, 0.4)';
+        ctx.lineWidth = 1.2;
+        raindrops.forEach(r => {
+          r.y += r.speed;
+          if (r.y > height) {
+            r.y = -20;
+            r.x = Math.random() * width;
+          }
+          ctx.beginPath();
+          ctx.moveTo(r.x, r.y);
+          ctx.lineTo(r.x - 2, r.y + r.length);
+          ctx.stroke();
+        });
+      }
 
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(800, audioCtx.currentTime);
+      // Dibujar y mover Confetti
+      confetti.forEach((c, idx) => {
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vy += 0.25; // Gravedad
+        c.rotation += c.rspeed;
 
-            rainGain = audioCtx.createGain();
-            rainGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-            rainGain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 1.5);
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate((c.rotation * Math.PI) / 180);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
+        ctx.restore();
 
-            rainNoiseNode.connect(filter);
-            filter.connect(rainGain);
-            rainGain.connect(audioCtx.destination);
-            rainNoiseNode.start();
-        }
+        if (c.y > height) confetti.splice(idx, 1);
+      });
 
-        function stopRainAudio() {
-            if (rainGain && audioCtx) {
-                rainGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
-                setTimeout(() => {
-                    if (rainNoiseNode) {
-                        rainNoiseNode.stop();
-                        rainNoiseNode.disconnect();
-                    }
-                }, 1000);
-            }
-        }
+      requestAnimationFrame(animateCanvas);
+    }
+    animateCanvas();
 
-        // Synthesize Night Park Cricket / Frog Chirp Audio Effects
-        function playChirp() {
-            if (!isAmbientActive || !audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            const isFrog = Math.random() > 0.6;
-            if (isFrog) {
-                // Low pitched frog ribbit
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(160, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-            } else {
-                // High cricket pulse
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(4200, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-            }
+    /* --- Audio Sintetizado (Web Audio API) --- */
+    let audioCtx = null;
+    let isMusicPlaying = false;
+    let musicInterval = null;
+    let isAmbiencePlaying = false;
 
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.2);
-        }
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
 
-        function toggleAmbient() {
-            initAudioContext();
-            isAmbientActive = !isAmbientActive;
-            const btn = document.getElementById('ambientBtn');
-            const badge = document.getElementById('ambientBadge');
+    function playNote(freq, type = 'sine', duration = 1.5) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
 
-            if (isAmbientActive) {
-                badge.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]";
-                btn.classList.add('bg-emerald-950/80', 'border-emerald-400/60');
-                ambientInterval = setInterval(() => {
-                    if (Math.random() > 0.3) playChirp();
-                }, 800);
-            } else {
-                badge.className = "w-2 h-2 rounded-full bg-slate-500";
-                btn.classList.remove('bg-emerald-950/80', 'border-emerald-400/60');
-                clearInterval(ambientInterval);
-            }
-        }
+    // Música de Fondo Estilo Lullaby / Caja de Música
+    function toggleMusic() {
+      initAudio();
+      const btn = document.getElementById('btnMusic');
+      isMusicPlaying = !isMusicPlaying;
 
-        // Rain Visual Particle Canvas
-        const rainCanvas = document.getElementById('rainCanvas');
-        const rainCtx = rainCanvas.getContext('2d');
-        rainCanvas.width = width;
-        rainCanvas.height = height;
+      if (isMusicPlaying) {
+        btn.classList.add('active');
+        const notes = [261.63, 329.63, 392.00, 493.88, 523.25, 440.00, 349.23];
+        let step = 0;
+        musicInterval = setInterval(() => {
+          playNote(notes[step % notes.length], 'sine', 2);
+          step++;
+        }, 800);
+      } else {
+        btn.classList.remove('active');
+        clearInterval(musicInterval);
+      }
+    }
 
-        const rainDrops = Array.from({ length: 120 }, () => ({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            length: Math.random() * 20 + 10,
-            speed: Math.random() * 10 + 12,
-            opacity: Math.random() * 0.3 + 0.1
-        }));
+    // Ruido Nocturno Sintetizado (Grillos)
+    function toggleAmbience() {
+      initAudio();
+      const btn = document.getElementById('btnAmbience');
+      isAmbiencePlaying = !isAmbiencePlaying;
 
-        function animateRain() {
-            if (!isRainActive) return;
-            rainCtx.clearRect(0, 0, width, height);
-            rainCtx.strokeStyle = 'rgba(186, 230, 253, 0.4)';
-            rainCtx.lineWidth = 1.2;
-            rainCtx.beginPath();
-            
-            rainDrops.forEach(d => {
-                rainCtx.moveTo(d.x, d.y);
-                rainCtx.lineTo(d.x - 2, d.y + d.length);
-                d.y += d.speed;
-                d.x -= 0.8;
-                if (d.y > height) {
-                    d.y = -20;
-                    d.x = Math.random() * width;
-                }
-            });
-            rainCtx.stroke();
-            requestAnimationFrame(animateRain);
-        }
+      if (isAmbiencePlaying) {
+        btn.classList.add('active');
+        this.cricketTimer = setInterval(() => {
+          if (Math.random() > 0.4) playNote(4500 + Math.random() * 500, 'triangle', 0.08);
+        }, 300);
+      } else {
+        btn.classList.remove('active');
+        clearInterval(this.cricketTimer);
+      }
+    }
 
-        function toggleRain() {
-            initAudioContext();
-            isRainActive = !isRainActive;
-            const btn = document.getElementById('rainBtn');
-            const badge = document.getElementById('rainBadge');
+    /* --- Interacción de Modales y Tulipanes --- */
+    function openTulip(type) {
+      initAudio();
+      playNote(type === 'pensar' ? 329.63 : type === 'alma' ? 261.63 : 392.00, 'sine', 1.8);
 
-            if (isRainActive) {
-                badge.className = "w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]";
-                btn.classList.add('bg-sky-950/80', 'border-sky-400/60');
-                rainCanvas.classList.remove('opacity-0');
-                startRainAudio();
-                animateRain();
-            } else {
-                badge.className = "w-2 h-2 rounded-full bg-slate-500";
-                btn.classList.remove('bg-sky-950/80', 'border-sky-400/60');
-                rainCanvas.classList.add('opacity-0');
-                stopRainAudio();
-            }
-        }
+      // Efecto visual de florecimiento
+      const wrappers = document.querySelectorAll('.tulip-wrapper');
+      wrappers.forEach(w => w.classList.remove('bloomed'));
+      
+      const targetClass = type === 'pensar' ? '.tulip-left' : type === 'alma' ? '.tulip-center' : '.tulip-right';
+      const target = document.querySelector(targetClass);
+      if (target) target.classList.add('bloomed');
 
-        // Celebrate Fireworks / Confetti Trigger
-        function triggerCelebration() {
-            initAudioContext();
-            
-            // Multi-stage confetti burst
-            const count = 200;
-            const defaults = {
-                origin: { y: 0.7 }
-            };
+      const modal = document.getElementById('modalOverlay');
+      document.getElementById('modalTag').innerText = messages[type].tag;
+      document.getElementById('modalText').innerText = messages[type].text;
+      modal.classList.add('active');
+    }
 
-            function fire(particleRatio, opts) {
-                confetti(Object.assign({}, defaults, opts, {
-                    particleCount: Math.floor(count * particleRatio)
-                }));
-            }
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
 
-            fire(0.25, { spread: 26, startVelocity: 55, colors: ['#f43f5e', '#ec4899'] });
-            fire(0.2, { spread: 60, colors: ['#fde047', '#a855f7'] });
-            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8, colors: ['#34d399', '#38bdf8'] });
-            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2, colors: ['#ffffff', '#f59e0b'] });
+    /* --- Cuadro de Deseos --- */
+    function openWishModal() {
+      document.getElementById('wishModalOverlay').classList.add('active');
+      renderWishes();
+    }
 
-            // Create gentle flower pulse bloom
-            ['left', 'center', 'right'].forEach(key => animateFlowerBloom(key));
-        }
+    function closeWishModal() {
+      document.getElementById('wishModalOverlay').classList.remove('active');
+    }
 
-        // Modal triggers & Animations
-        function openTulipModal(key) {
-            const data = tulipData[key];
-            if (!data) return;
+    function saveWish() {
+      const input = document.getElementById('wishInput');
+      const val = input.value.trim();
+      if (!val) return;
 
-            initAudioContext();
-            animateFlowerBloom(key);
+      const wishes = JSON.parse(localStorage.getItem('ediths_wishes') || '[]');
+      wishes.push({ text: val, date: new Date().toLocaleDateString() });
+      localStorage.setItem('ediths_wishes', JSON.stringify(wishes));
 
-            document.getElementById('modalConcept').innerText = data.concept;
-            document.getElementById('modalText').innerText = `"${data.text}"`;
-            
-            const iconContainer = document.getElementById('modalIconContainer');
-            iconContainer.className = `w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl shadow-lg border ${data.iconBg}`;
-            document.getElementById('modalIcon').className = `fa-solid ${data.icon}`;
+      input.value = '';
+      renderWishes();
+      triggerConfetti();
+    }
 
-            createSparkleBurst(key, data.colorBurst);
+    function renderWishes() {
+      const wishes = JSON.parse(localStorage.getItem('ediths_wishes') || '[]');
+      const container = document.getElementById('wishesList');
+      if (wishes.length === 0) {
+        container.innerHTML = '<p style="font-size:0.85rem; opacity:0.6;">No hay deseos guardados aún. ¡Escribe el primero!</p>';
+        return;
+      }
+      container.innerHTML = wishes.map(w => `
+        <div class="wish-item">
+          <div>${w.text}</div>
+          <div class="wish-date">${w.date}</div>
+        </div>
+      `).join('');
+    }
 
-            const modal = document.getElementById('tulipModal');
-            const card = document.getElementById('modalCard');
-            
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-            card.classList.remove('scale-90');
-            card.classList.add('scale-100');
-        }
+    /* --- Event Listeners --- */
+    document.getElementById('btnLetter').addEventListener('click', () => {
+      openTulip('carta');
+    });
 
-        function closeTulipModal() {
-            const modal = document.getElementById('tulipModal');
-            const card = document.getElementById('modalCard');
-            
-            card.classList.remove('scale-100');
-            card.classList.add('scale-90');
-            modal.classList.add('opacity-0', 'pointer-events-none');
-        }
+    document.getElementById('btnWish').addEventListener('click', openWishModal);
 
-        // Petals Bloom Motion
-        function animateFlowerBloom(key) {
-            const flowerHead = document.getElementById(`${key}FlowerHead`);
-            const petalL = document.getElementById(`${key}PetalL`);
-            const petalR = document.getElementById(`${key}PetalR`);
+    document.getElementById('btnTheme').addEventListener('click', () => {
+      document.body.classList.toggle('day-mode');
+    });
 
-            if (flowerHead && petalL && petalR) {
-                flowerHead.style.transform = 'scale(1.1) translateY(-8px)';
-                petalL.style.transform = 'rotate(-12deg) translateX(-4px)';
-                petalR.style.transform = 'rotate(12deg) translateX(4px)';
+    document.getElementById('btnRain').addEventListener('click', function() {
+      isRaining = !isRaining;
+      this.classList.toggle('active', isRaining);
+    });
 
-                setTimeout(() => {
-                    flowerHead.style.transform = 'scale(1) translateY(0)';
-                    petalL.style.transform = 'rotate(0deg) translateX(0)';
-                    petalR.style.transform = 'rotate(0deg) translateX(0)';
-                }, 800);
-            }
-        }
-
-        // Sparkle FX Burst
-        function createSparkleBurst(key, colors) {
-            const elements = {
-                left: document.querySelector('.tulip-sway-left'),
-                center: document.querySelector('.tulip-sway-center'),
-                right: document.querySelector('.tulip-sway-right')
-            };
-
-            const target = elements[key];
-            if (!target) return;
-
-            const rect = target.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 3;
-
-            for (let i = 0; i < 25; i++) {
-                const p = document.createElement('div');
-                p.className = 'fixed w-2.5 h-2.5 rounded-full pointer-events-none z-50';
-                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                p.style.left = `${centerX}px`;
-                p.style.top = `${centerY}px`;
-                p.style.boxShadow = `0 0 10px ${p.style.backgroundColor}`;
-                document.body.appendChild(p);
-
-                const angle = Math.random() * Math.PI * 2;
-                const dist = Math.random() * 120 + 30;
-                const duration = Math.random() * 700 + 400;
-
-                p.animate([
-                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-                    { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`, opacity: 0 }
-                ], {
-                    duration: duration,
-                    easing: 'cubic-bezier(0.16, 1, 0.3, 1)'
-                }).onfinish = () => p.remove();
-            }
-        }
-    </script>
+    document.getElementById('btnMusic').addEventListener('click', toggleMusic);
+    document.getElementById('btnAmbience').addEventListener('click', toggleAmbience);
+    document.getElementById('btnCelebrate').addEventListener('click', triggerConfetti);
+  </script>
 </body>
 </html>
